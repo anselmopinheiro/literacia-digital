@@ -98,6 +98,12 @@ def _column_letter(index: int) -> str:
 
 def _build_sheet_xml(rows: List[List[str]]) -> bytes:
     """Cria o XML da folha de cálculo com os dados fornecidos."""
+
+    def format_cell_value(value: str) -> str:
+        """Escapa texto e converte quebras de linha para o formato esperado pelo Excel."""
+
+        escaped = escape(value)
+        return escaped.replace("\n", "&#10;")
     sheet_lines = [
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
@@ -108,9 +114,9 @@ def _build_sheet_xml(rows: List[List[str]]) -> bytes:
         sheet_lines.append(f"    <row r=\"{row_idx}\">")
         for col_idx, value in enumerate(row):
             cell_ref = f"{_column_letter(col_idx)}{row_idx}"
-            cell_value = escape(value)
+            cell_value = format_cell_value(value)
             sheet_lines.append(
-                f"      <c r=\"{cell_ref}\" t=\"inlineStr\"><is><t>{cell_value}</t></is></c>"
+                f"      <c r=\"{cell_ref}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{cell_value}</t></is></c>"
             )
         sheet_lines.append("    </row>")
     sheet_lines.append("  </sheetData>")
