@@ -120,6 +120,7 @@ def _build_sheet_xml(rows: List[List[str]]) -> bytes:
 
         escaped = escape(value)
         return escaped.replace("\n", "&#10;")
+
     sheet_lines = [
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>",
         '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
@@ -132,7 +133,8 @@ def _build_sheet_xml(rows: List[List[str]]) -> bytes:
             cell_ref = f"{_column_letter(col_idx)}{row_idx}"
             cell_value = format_cell_value(value)
             sheet_lines.append(
-                f"      <c r=\"{cell_ref}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{cell_value}</t></is></c>"
+                "      "
+                f"<c r=\"{cell_ref}\" s=\"0\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{cell_value}</t></is></c>"
             )
         sheet_lines.append("    </row>")
     sheet_lines.append("  </sheetData>")
@@ -155,7 +157,17 @@ def write_xlsx(rows: List[List[str]], output_path: Path) -> None:
     workbook_rels = """<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
 <Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">
   <Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>
+  <Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>
 </Relationships>""".encode("utf-8")
+
+    styles_xml = """<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">
+  <fonts count=\"1\">\n    <font/>\n  </fonts>
+  <fills count=\"1\">\n    <fill><patternFill patternType=\"none\"/></fill>\n  </fills>
+  <borders count=\"1\">\n    <border/>\n  </borders>
+  <cellStyleXfs count=\"1\">\n    <xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/>\n  </cellStyleXfs>
+  <cellXfs count=\"1\">\n    <xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\">\n      <alignment wrapText=\"1\"/>\n    </xf>\n  </cellXfs>
+</styleSheet>""".encode("utf-8")
 
     root_rels = """<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
 <Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">
@@ -168,6 +180,7 @@ def write_xlsx(rows: List[List[str]], output_path: Path) -> None:
   <Default Extension=\"xml\" ContentType=\"application/xml\"/>
   <Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>
   <Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>
+  <Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>
 </Types>""".encode("utf-8")
 
     with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as xlsx:
@@ -176,6 +189,7 @@ def write_xlsx(rows: List[List[str]], output_path: Path) -> None:
         xlsx.writestr("xl/workbook.xml", workbook_xml)
         xlsx.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
         xlsx.writestr("xl/worksheets/sheet1.xml", sheet_xml)
+        xlsx.writestr("xl/styles.xml", styles_xml)
 
 
 
