@@ -1,13 +1,16 @@
+import json
 import os
 import re
+import sys
 import zipfile
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
 
 # Namespaces utilizados nos ficheiros DOCX
 WORD_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+DEFAULT_CONFIG_PATH = Path("config_exportar_sumarios.json")
 
 
 def _collect_table_text(doc_root: ET.Element) -> List[List[List[str]]]:
@@ -183,9 +186,37 @@ def process_directory(base_dir: Path, output_file: Path) -> None:
     print(f"Ficheiro gerado: {output_file}")
 
 
+def _load_paths_from_config(config_path: Path) -> Tuple[Path, Path]:
+    """Lê o ficheiro JSON de configuração e devolve diretórios de entrada e saída."""
+
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"Configuração não encontrada em {config_path}. Crie o ficheiro de acordo com o formato inicial."
+        )
+
+    with config_path.open("r", encoding="utf-8") as config_file:
+        config: Dict[str, str] = json.load(config_file)
+
+    docs_dir = config.get("docs_dir")
+    output_xlsx = config.get("output_xlsx")
+
+    if not isinstance(docs_dir, str) or not isinstance(output_xlsx, str):
+        raise ValueError(
+            "Configuração inválida: as chaves 'docs_dir' e 'output_xlsx' são obrigatórias e devem ser strings."
+        )
+
+    return Path(docs_dir), Path(output_xlsx)
+
+
 def main() -> None:
-    base_dir = Path(os.environ.get("DOCS_DIR", "documentos_turmas"))
-    output_file = Path(os.environ.get("OUTPUT_XLSX", "sumarios.xlsx"))
+    config_path = Path(os.environ.get("EXPORTAR_SUMARIOS_CONFIG", DEFAULT_CONFIG_PATH))
+
+    try:
+        base_dir, output_file = _load_paths_from_config(config_path)
+    except Exception as exc:  # noqa: BLE001
+        print(f"Erro ao ler configuração: {exc}")
+        sys.exit(1)
+
     process_directory(base_dir, output_file)
 
 
