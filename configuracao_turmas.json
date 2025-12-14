@@ -1,0 +1,76 @@
+{
+    "turmas": {
+        "7D": {
+            "nome": "7D",
+            "dt": "Pedro Almeida",
+            "ronda": "2.ª ronda",
+            "sessao": "Sessão Prática",
+            "padlet": "https://padlet.com/aedocercodoporto/7d_2526",
+            "docentes": {
+                "docente1": "Carla Esteves",
+                "docente2": "Anselmo Pinheiro",
+                "docente3": "Claúdia Macedo",
+                "docente4": "Magda Fernandes"
+            },
+            "sessoes": [
+                { "sessao": 1, "data": "2025-12-10" },
+                { "sessao": 2, "data": "2025-12-17" },
+                { "sessao": 3, "data": "2026-01-07" },
+                { "sessao": 4, "data": "2026-01-14" },
+                { "sessao": 5, "data": "2026-02-04" },
+                { "sessao": 6, "data": "2026-02-11" },
+                { "sessao": 7, "data": "2026-02-25" },
+                { "sessao": 8, "data": "2026-03-04" },
+                { "sessao": 9, "data": "2026-03-11" }
+            ]
+        },
+        "6F": {
+            "nome": "6F",
+            "dt": "Marta Pinho",
+            "ronda": "2.ª ronda",
+            "sessao": "Sessão Prática",
+            "padlet": "https://padlet.com/aedocercodoporto/6f_2526",
+            "docentes": {
+                "docente1": "Carla Esteves",
+                "docente2": "Anselmo Pinheiro",
+                "docente3": "Marta Pinho",
+                "docente4": "Tânia Pires"
+            },
+            "sessoes": [
+                { "sessao": 1, "data": "2025-12-11" },
+                { "sessao": 2, "data": "2025-12-18" },
+                { "sessao": 3, "data": "2026-01-08" },
+                { "sessao": 4, "data": "2026-01-15" },
+                { "sessao": 5, "data": "2026-02-05" },
+                { "sessao": 6, "data": "2026-02-12" },
+                { "sessao": 7, "data": "2026-02-26" },
+                { "sessao": 8, "data": "2026-03-05" },
+                { "sessao": 9, "data": "2026-03-12" }
+            ]
+        },
+        "5F": {
+            "nome": "5F",
+            "dt": "Alexandra Costa",
+            "ronda": "2.ª ronda",
+            "sessao": "Sessão Prática",
+            "padlet": "https://padlet.com/aedocercodoporto/5f_2526",
+            "docentes": {
+                "docente1": "Carla Esteves",
+                "docente2": "José Fernandes",
+                "docente3": "Bárbara Moreira",
+                "docente4": "Alexandra Costa"
+            },
+            "sessoes": [
+                { "sessao": 1, "data": "2025-12-12" },
+                { "sessao": 2, "data": "2025-12-19" },
+                { "sessao": 3, "data": "2026-01-09" },
+                { "sessao": 4, "data": "2026-01-16" },
+                { "sessao": 5, "data": "2026-02-06" },
+                { "sessao": 6, "data": "2026-02-13" },
+                { "sessao": 7, "data": "2026-02-27" },
+                { "sessao": 8, "data": "2026-03-06" },
+                { "sessao": 9, "data": "2026-03-13" }
+            ]
+        }
+    }
+}

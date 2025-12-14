@@ -1,0 +1,71 @@
+{
+    "turmas": {
+        "5D": {
+            "nome": "5D",
+            "dt": "Sandra Freitas",
+            "ronda": "1ª Ronda",
+            "sessao": "Sessão Prática",
+            "padlet": "https://padlet.com/aedocercodoporto/5d_2526",
+            "docentes": {
+                "docente1": "Carla Esteves",
+                "docente2": "José Fernandes",
+                "docente3": "Sandra Freitas",
+                "docente4": "Joaquim Henriques"
+            },
+            "sessoes": [
+              
+                {"sessao": 4, "data": "2025-10-24"},
+                {"sessao": 5, "data": "2025-10-31"},
+                {"sessao": 6, "data": "2025-11-07"},
+                {"sessao": 7, "data": "2025-11-21"},
+                {"sessao": 8, "data": "2025-11-28"},
+                {"sessao": 9, "data": "2025-12-05"}
+            ]
+        },
+        "6G": {
+            "nome": "6G",
+            "dt": "Andreia Moreira",
+            "ronda": "1ª Ronda",
+            "sessao": "Sessão Prática",
+            "padlet": "https://padlet.com/aedocercodoporto/6G_2526",
+            "docentes": {
+                "docente1": "Anselmo Pinheiro",
+                "docente2": "Carla Esteves",
+                "docente3": "Andreia Moreira",
+                "docente4": "Paula Pinho"
+            },
+            "sessoes": [
+                
+               
+                {"sessao": 4, "data": "2025-10-23"},
+                {"sessao": 5, "data": "2025-10-30"},
+                {"sessao": 6, "data": "2025-11-06"},
+                {"sessao": 7, "data": "2025-11-20"},
+                {"sessao": 8, "data": "2025-11-27"},
+                {"sessao": 9, "data": "2025-12-04"}
+            ]
+        },
+        "7F": {
+            "nome": "7F",
+            "dt": "Vera Coelho",
+            "ronda": "1ª Ronda",
+            "sessao": "Sessão Prática",
+            "padlet": "https://padlet.com/aedocercodoporto/7f_2526",
+            "docentes": {
+                "docente1": "Anselmo Pinheiro",
+                "docente2": "Carla Esteves",
+                "docente3": "Paula Sacramento",
+                "docente4": "Márcia Barros"
+            },
+            "sessoes": [
+             
+                {"sessao": 4, "data": "2025-10-22"},
+                {"sessao": 5, "data": "2025-10-29"},
+                {"sessao": 6, "data": "2025-11-05"},
+                {"sessao": 7, "data": "2025-11-19"},
+                {"sessao": 8, "data": "2025-11-26"},
+                {"sessao": 9, "data": "2025-12-03"}
+            ]
+        }
+    }
+}
