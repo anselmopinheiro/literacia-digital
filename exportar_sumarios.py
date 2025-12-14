@@ -24,7 +24,20 @@ def _collect_table_text(doc_root: ET.Element) -> List[List[List[str]]]:
     tables: List[List[List[str]]] = []
 
     def get_text(element: ET.Element) -> str:
-        return "".join(t.text or "" for t in element.iter(f"{{{WORD_NAMESPACE}}}t"))
+        parts: List[str] = []
+
+        for node in element.iter():
+            tag = node.tag
+
+            if tag == f"{{{WORD_NAMESPACE}}}t":
+                parts.append(node.text or "")
+            elif tag in {f"{{{WORD_NAMESPACE}}}br", f"{{{WORD_NAMESPACE}}}cr"}:
+                parts.append("\n")
+
+            if node.tail:
+                parts.append(node.tail)
+
+        return "".join(parts)
 
     for tbl in doc_root.iter(f"{{{WORD_NAMESPACE}}}tbl"):
         rows: List[List[str]] = []
