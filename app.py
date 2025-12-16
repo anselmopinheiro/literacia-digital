@@ -3,7 +3,7 @@ import json
 import os
 import sys
 from datetime import datetime
-from tkinter import BOTH, END, LEFT, Button, Frame, Label, Listbox, Scrollbar, Text, Tk, filedialog, messagebox
+from tkinter import BOTH, END, LEFT, RIGHT, Button, Frame, Label, Listbox, Scrollbar, Text, Tk, filedialog, messagebox
 
 from docx import Document
 from docx.oxml.ns import qn
