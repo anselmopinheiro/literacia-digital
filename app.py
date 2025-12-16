@@ -1,10 +1,13 @@
 #v24
-import os
 import json
-from docx import Document
+import os
+import sys
 from datetime import datetime
-from docx.oxml.shared import OxmlElement
+from tkinter import BOTH, END, LEFT, RIGHT, Button, Frame, Label, Listbox, Scrollbar, Text, Tk, filedialog, messagebox
+
+from docx import Document
 from docx.oxml.ns import qn
+from docx.oxml.shared import OxmlElement
 
 def add_hyperlink(paragraph, url, text):
     """
@@ -264,48 +267,74 @@ def criar_json_configuracao():
     print("Ficheiro 'configuracao_turmas.json' criado com sucesso!")
     print("Pode editar este ficheiro para personalizar as turmas, datas e docentes.")
 
-def processar_turmas_do_json():
-    """
-    Processa todas as turmas baseado no ficheiro JSON
-    """
-    json_file = "configuracao_turmas.json"
-    template_file = "template.docx"
-    output_folder = "documentos_turmas"
-    
-    # Verifica se os ficheiros existem
+def carregar_configuracao(json_file):
+    """Carrega o ficheiro de configuração JSON caso exista."""
     if not os.path.exists(json_file):
         print(f"ERRO: Ficheiro '{json_file}' não encontrado!")
         print("Execute a opção 1 primeiro para criar o ficheiro de configuração.")
-        return
-        
+        return None
+
+    try:
+        with open(json_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"ERRO ao ler ficheiro JSON: {e}")
+        return None
+
+def listar_turmas_disponiveis(config):
+    """Mostra na consola as turmas disponíveis no ficheiro de configuração."""
+    turmas = list(config.get("turmas", {}).keys())
+
+    if not turmas:
+        print("Não foram encontradas turmas no ficheiro JSON.")
+        return []
+
+    print("=== TURMAS DISPONÍVEIS ===")
+    for idx, turma in enumerate(turmas, start=1):
+        print(f"{idx}. {turma}")
+
+    return turmas
+
+def processar_turmas_do_json(turmas_selecionadas=None, config=None):
+    """Processa todas as turmas ou apenas as selecionadas no ficheiro JSON."""
+    json_file = "configuracao_turmas.json"
+    template_file = "template.docx"
+    output_folder = "documentos_turmas"
+
     if not os.path.exists(template_file):
         print(f"ERRO: Ficheiro template '{template_file}' não encontrado!")
         return
-    
-    # Cria pasta de saída
+
+    if config is None:
+        config = carregar_configuracao(json_file)
+        if config is None:
+            return
+
+    turmas_config = config.get("turmas", {})
+    if not turmas_config:
+        print("ERRO: Não foram encontradas turmas no ficheiro de configuração.")
+        return
+
+    if turmas_selecionadas:
+        turmas_config = {nome: dados for nome, dados in turmas_config.items() if nome in turmas_selecionadas}
+        if not turmas_config:
+            print("ERRO: Nenhuma das turmas selecionadas existe no ficheiro JSON.")
+            return
+
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    
-    # Carrega configuração do JSON
-    try:
-        with open(json_file, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-    except Exception as e:
-        print(f"ERRO ao ler ficheiro JSON: {e}")
-        return
-    
-    # Processa cada turma
-    for nome_turma, dados_turma in config["turmas"].items():
+
+    turmas_processadas = 0
+
+    for nome_turma, dados_turma in turmas_config.items():
+        turmas_processadas += 1
         print(f"\n=== Processando {nome_turma} ===")
-        
-        # Processa cada sessão da turma
+
         for sessao_info in dados_turma["sessoes"]:
             try:
-                # Converte data
                 data_obj = datetime.strptime(sessao_info["data"], "%Y-%m-%d")
                 data_formatada = data_obj.strftime("%d/%m/%Y")
-                
-                # Prepara dados para substituição
+
                 dados_documento = {
                     "<<Turma>>": dados_turma["nome"],
                     "<<DT>>": dados_turma["dt"],
@@ -318,32 +347,192 @@ def processar_turmas_do_json():
                     "<<Docente3>>": dados_turma["docentes"]["docente3"],
                     "<<Docente4>>": dados_turma["docentes"]["docente4"]
                 }
-                
-                # Extrai número da ronda (ex: "1ª Ronda" → "1")
+
                 ronda_numero = ''.join(filter(str.isdigit, dados_turma["ronda"]))
                 if not ronda_numero:
-                    ronda_numero = "1"  # Default se não encontrar número
-                
-                # Nome do ficheiro: turma_sessao-#_ronda-#_data.docx
+                    ronda_numero = "1"
+
                 nome_arquivo = f"{dados_turma['nome']}_sessao-{sessao_info['sessao']}_ronda-{ronda_numero}_{data_obj.strftime('%Y-%m-%d')}.docx"
                 caminho_saida = os.path.join(output_folder, nome_arquivo)
-                
-                # Cria o documento
+
                 substituir_tags_docx(template_file, dados_documento, caminho_saida)
                 print(f"  → Sessão {sessao_info['sessao']:02d} - {data_formatada} → {nome_arquivo}")
-                
+
             except ValueError as e:
                 print(f"  ERRO: Data inválida '{sessao_info['data']}': {e}")
             except Exception as e:
                 print(f"  ERRO ao processar sessão: {e}")
-    
-    print(f"\n✅ Processamento concluído!")
-    print("📁 Ficheiros criados na pasta '{}'".format(output_folder))
-    print("📋 Padrão de nomes: turma_sessao-#_ronda-#_data.docx")
-    print("   - Turma: nome da turma do JSON")
-    print("   - #: número da sessão")
-    print("   - #: número da ronda")
-    print("   - Data: formato YYYY-MM-DD")
+
+    if turmas_processadas:
+        print(f"\n✅ Processamento concluído!")
+        print("📁 Ficheiros criados na pasta '{}'".format(output_folder))
+        print("📋 Padrão de nomes: turma_sessao-#_ronda-#_data.docx")
+        print("   - Turma: nome da turma do JSON")
+        print("   - #: número da sessão")
+        print("   - #: número da ronda")
+        print("   - Data: formato YYYY-MM-DD")
+
+
+class AplicacaoGUI:
+    """Interface gráfica para gerir o ficheiro JSON e executar as opções do CLI."""
+
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Gerador de Documentos - Modo Gráfico")
+        self.json_path = os.path.abspath("configuracao_turmas.json")
+        self.config_cache = None
+
+        self._criar_widgets()
+        self._carregar_json_para_texto()
+        self._atualizar_lista_turmas()
+
+    def _criar_widgets(self):
+        topo = Frame(self.master)
+        topo.pack(fill=BOTH, padx=10, pady=5)
+
+        Label(topo, text="Ficheiro JSON:").pack(side=LEFT)
+        Button(topo, text="Abrir...", command=self._selecionar_json).pack(side=LEFT, padx=5)
+        Button(topo, text="Criar modelo", command=self._criar_json).pack(side=LEFT, padx=5)
+        Button(topo, text="Guardar", command=self._guardar_json).pack(side=LEFT, padx=5)
+
+        corpo = Frame(self.master)
+        corpo.pack(fill=BOTH, expand=True, padx=10, pady=5)
+
+        esquerda = Frame(corpo)
+        esquerda.pack(side=LEFT, fill=BOTH, expand=True)
+        Label(esquerda, text="Conteúdo do JSON").pack()
+        self.texto_json = Text(esquerda, wrap="none", height=20)
+        self.texto_json.pack(fill=BOTH, expand=True)
+
+        direita = Frame(corpo)
+        direita.pack(side=RIGHT, fill=BOTH, expand=True, padx=(10, 0))
+        Label(direita, text="Turmas disponíveis").pack()
+
+        lista_frame = Frame(direita)
+        lista_frame.pack(fill=BOTH, expand=True)
+        scrollbar = Scrollbar(lista_frame)
+        scrollbar.pack(side=RIGHT, fill="y")
+        self.lista_turmas = Listbox(lista_frame, height=12, yscrollcommand=scrollbar.set, exportselection=False)
+        self.lista_turmas.pack(side=LEFT, fill=BOTH, expand=True)
+        scrollbar.config(command=self.lista_turmas.yview)
+
+        botoes = Frame(direita)
+        botoes.pack(fill=BOTH, expand=False, pady=5)
+        Button(botoes, text="Atualizar turmas", command=self._atualizar_lista_turmas).pack(fill=BOTH, pady=2)
+        Button(botoes, text="Processar selecionada", command=self._processar_turma_unica).pack(fill=BOTH, pady=2)
+        Button(botoes, text="Processar todas", command=self._processar_todas).pack(fill=BOTH, pady=2)
+        Button(botoes, text="Mostrar estrutura", command=mostrar_estrutura_json).pack(fill=BOTH, pady=2)
+
+    def _selecionar_json(self):
+        caminho = filedialog.askopenfilename(
+            title="Selecionar ficheiro JSON",
+            filetypes=[("JSON", "*.json"), ("Todos", "*.*")],
+            initialfile=os.path.basename(self.json_path),
+        )
+        if caminho:
+            self.json_path = caminho
+            self._carregar_json_para_texto()
+            self._atualizar_lista_turmas()
+
+    def _criar_json(self):
+        criar_json_configuracao()
+        self.json_path = os.path.abspath("configuracao_turmas.json")
+        self._carregar_json_para_texto()
+        self._atualizar_lista_turmas()
+        messagebox.showinfo("JSON criado", f"Ficheiro criado em {self.json_path}")
+
+    def _carregar_json_para_texto(self):
+        self.texto_json.delete("1.0", END)
+        try:
+            with open(self.json_path, "r", encoding="utf-8") as f:
+                conteudo = f.read()
+                self.texto_json.insert("1.0", conteudo)
+                self.config_cache = json.loads(conteudo)
+        except FileNotFoundError:
+            self.config_cache = None
+        except json.JSONDecodeError as exc:
+            messagebox.showerror("Erro JSON", f"O ficheiro contém erros: {exc}")
+            self.config_cache = None
+
+    def _guardar_json(self):
+        conteudo = self.texto_json.get("1.0", END).strip()
+        if not conteudo:
+            messagebox.showwarning("Sem conteúdo", "O campo de texto está vazio.")
+            return
+
+        try:
+            dados = json.loads(conteudo)
+        except json.JSONDecodeError as exc:
+            messagebox.showerror("Erro JSON", f"Não foi possível guardar: {exc}")
+            return
+
+        with open(self.json_path, "w", encoding="utf-8") as f:
+            json.dump(dados, f, indent=4, ensure_ascii=False)
+        self.config_cache = dados
+        messagebox.showinfo("Guardado", f"Configuração guardada em {self.json_path}")
+        self._atualizar_lista_turmas()
+
+    def _atualizar_lista_turmas(self):
+        self.lista_turmas.delete(0, END)
+        if self.config_cache is None:
+            config = carregar_configuracao(self.json_path)
+            self.config_cache = config
+        turmas = []
+        if self.config_cache:
+            turmas = listar_turmas_disponiveis(self.config_cache)
+        for turma in turmas:
+            self.lista_turmas.insert(END, turma)
+
+    def _processar_turma_unica(self):
+        selecionados = self.lista_turmas.curselection()
+        if not selecionados:
+            messagebox.showwarning("Seleção necessária", "Escolha uma turma da lista.")
+            return
+
+        turma = self.lista_turmas.get(selecionados[0])
+        processar_turmas_do_json({turma}, config=self._config_atual())
+        messagebox.showinfo("Concluído", f"Processamento da {turma} terminado.")
+
+    def _processar_todas(self):
+        processar_turmas_do_json(config=self._config_atual())
+        messagebox.showinfo("Concluído", "Processamento de todas as turmas terminado.")
+
+    def _config_atual(self):
+        if self.config_cache is not None:
+            return self.config_cache
+        return carregar_configuracao(self.json_path)
+
+def selecionar_turma_para_processar():
+    """Lista as turmas disponíveis e permite processar apenas uma delas."""
+    json_file = "configuracao_turmas.json"
+    config = carregar_configuracao(json_file)
+
+    if config is None:
+        return
+
+    turmas = listar_turmas_disponiveis(config)
+    if not turmas:
+        return
+
+    escolha = input("\nIntroduza o número da turma que deseja processar (0 para cancelar): ").strip()
+
+    if not escolha.isdigit():
+        print("Opção inválida. Utilize apenas números.")
+        return
+
+    escolha_num = int(escolha)
+
+    if escolha_num == 0:
+        print("Operação cancelada pelo utilizador.")
+        return
+
+    if not 1 <= escolha_num <= len(turmas):
+        print("Opção inválida. Selecione um número da lista apresentada.")
+        return
+
+    turma_escolhida = turmas[escolha_num - 1]
+    print(f"\n→ A processar apenas a {turma_escolhida}...")
+    processar_turmas_do_json({turma_escolhida}, config=config)
 
 def mostrar_estrutura_json():
     """
@@ -398,13 +587,21 @@ Exemplos de nomes:
     """)
 
 if __name__ == "__main__":
+    if "--gui" in sys.argv:
+        root = Tk()
+        AplicacaoGUI(root)
+        root.mainloop()
+        sys.exit(0)
+
     print("=== GERADOR DE DOCUMENTOS DOCX COM JSON ===")
     print("1. Criar ficheiro de configuração JSON (configuracao_turmas.json)")
     print("2. Processar todas as turmas do JSON")
-    print("3. Mostrar estrutura do JSON")
-    
-    opcao = input("\nEscolha uma opção (1-3): ").strip()
-    
+    print("3. Listar turmas do JSON e processar uma específica")
+    print("4. Mostrar estrutura do JSON")
+    print("5. Abrir interface gráfica")
+
+    opcao = input("\nEscolha uma opção (1-5): ").strip()
+
     if opcao == "1":
         criar_json_configuracao()
         print("\n💡 Dica: Edite o ficheiro 'configuracao_turmas.json' para personalizar:")
@@ -412,16 +609,24 @@ if __name__ == "__main__":
         print("   - Datas das sessões")
         print("   - Direção técnica e rondas")
         print("   - URLs do Padlet (serão convertidos em hyperlinks)")
-        
+
     elif opcao == "2":
         processar_turmas_do_json()
-        
+
     elif opcao == "3":
+        selecionar_turma_para_processar()
+
+    elif opcao == "4":
         mostrar_estrutura_json()
-        
+
+    elif opcao == "5":
+        root = Tk()
+        AplicacaoGUI(root)
+        root.mainloop()
+
     else:
         print("Opção inválida. Tente novamente.")
-    
+
     print("\n📋 Lembre-se:")
     print("   - Tenha o ficheiro 'template.docx' no mesmo diretório")
     print("   - As tags no template devem ser: <<Turma>>, <<DT>>, <<ronda>>, <<sessao>>, <<data>>, <<Docente1>>, <<Docente2>>, <<Docente3>>, <<Docente4>>")
